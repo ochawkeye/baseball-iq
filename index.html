@@ -244,10 +244,10 @@ input::placeholder { color: #374151; }
         <div style="font-size:13px;line-height:1.85;color:#4a5878;">
           Watch the pitcher from first base.<br>
           The moment he moves, decide:<br><br>
-          <span class="color-blue" style="font-size:15px;">← STEAL</span>
-          &nbsp;if throwing home&nbsp;&nbsp;·&nbsp;&nbsp;
-          <span class="color-red" style="font-size:15px;">DIVE BACK →</span>
-          &nbsp;if picking off<br><br>
+          <span class="color-red" style="font-size:15px;">← DIVE BACK</span>
+          &nbsp;if picking off&nbsp;&nbsp;·&nbsp;&nbsp;
+          <span class="color-blue" style="font-size:15px;">STEAL →</span>
+          &nbsp;if throwing home<br><br>
           Wrong read = <span class="color-red">+2.0s penalty</span>.<br>
           10 rounds · lowest cumulative time wins.
         </div>
@@ -286,14 +286,14 @@ input::placeholder { color: #374151; }
     <div class="status-bar" id="game-status" style="color:#1e2840;">GET READY...</div>
 
     <div class="action-row">
-      <button class="action-btn steal-btn disabled" id="btn-steal" onclick="handleChoice('steal')">← STEAL</button>
-      <button class="action-btn dive-btn  disabled" id="btn-dive"  onclick="handleChoice('dive')">DIVE BACK →</button>
+      <button class="action-btn dive-btn  disabled" id="btn-dive"  onclick="handleChoice('dive')">← DIVE BACK</button>
+      <button class="action-btn steal-btn disabled" id="btn-steal" onclick="handleChoice('steal')">STEAL →</button>
     </div>
 
     <div id="reaction-display" class="text-center text-sm hidden" style="margin-bottom:10px;"></div>
 
     <div class="text-center" style="font-size:10px;color:#141820;letter-spacing:1px;margin-top:4px;">
-      <span style="color:#3050a0;">S / ←</span> Steal &nbsp;·&nbsp; <span style="color:#802020;">D / →</span> Dive Back
+      <span style="color:#802020;">S / ←</span> Dive Back &nbsp;·&nbsp; <span style="color:#3050a0;">D / →</span> Steal
     </div>
   </div>
 
@@ -449,18 +449,27 @@ function cfThumbUrl(id) {
 
 // Load HLS.js for browsers that don't natively support HLS (Chrome, Firefox)
 function loadVideo(videoEl, id) {
-  const url = cfVideoUrl(id);
+  const hlsUrl = `https://${CF_DOMAIN}/${id}/manifest/video.m3u8`;
+
+  // Destroy any existing HLS instance
+  if (videoEl._hls) { videoEl._hls.destroy(); videoEl._hls = null; }
+
   if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
-    // Safari supports HLS natively
-    videoEl.src = url;
+    // Safari — native HLS support
+    videoEl.src = hlsUrl;
   } else if (window.Hls && window.Hls.isSupported()) {
-    const hls = new window.Hls();
-    hls.loadSource(url);
+    // Chrome/Firefox via HLS.js
+    const hls = new window.Hls({ enableWorker: true, lowLatencyMode: false });
+    hls.on(window.Hls.Events.ERROR, (event, data) => {
+      if (data.fatal) {
+        console.error('HLS error:', data);
+      }
+    });
+    hls.loadSource(hlsUrl);
     hls.attachMedia(videoEl);
-    videoEl._hls = hls; // store reference to destroy later if needed
+    videoEl._hls = hls;
   } else {
-    // Fallback — try direct assignment
-    videoEl.src = url;
+    videoEl.src = hlsUrl;
   }
 }
 
@@ -751,7 +760,7 @@ let adminPollInterval = null;
 
 function adminLoadVideo() {
   const id = document.getElementById('admin-url').value.trim();
-  if (id.length < 20) { alert("Please enter a valid Cloudflare Stream video ID"); return; }
+  if (!id || id.length < 10) { alert("Please enter a valid Cloudflare Stream video ID"); return; }
 
   adminState.videoId = id;
   adminState.markedTime = null;
