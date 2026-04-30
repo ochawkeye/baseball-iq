@@ -293,7 +293,7 @@ input::placeholder { color: #374151; }
     <div id="reaction-display" class="text-center text-sm hidden" style="margin-bottom:10px;"></div>
 
     <div class="text-center" style="font-size:10px;color:#141820;letter-spacing:1px;margin-top:4px;">
-      <span style="color:#802020;">S / ←</span> Dive Back &nbsp;·&nbsp; <span style="color:#3050a0;">D / →</span> Steal
+      <span style="color:#802020;">A / ←</span> Dive Back &nbsp;·&nbsp; <span style="color:#3050a0;">L / →</span> Steal
     </div>
   </div>
 
@@ -695,8 +695,8 @@ function updateHUD() {
 
 document.addEventListener('keydown', e => {
   if (document.getElementById('screen-game').classList.contains('hidden')) return;
-  if (e.key === 's' || e.key === 'S' || e.key === 'ArrowLeft')  handleChoice('steal');
-  if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') handleChoice('dive');
+  if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') handleChoice('dive');
+  if (e.key === 'ArrowRight' || e.key === 'l' || e.key === 'L') handleChoice('steal');
 });
 
 // ─── Result ───────────────────────────────────────────────────────────────────
